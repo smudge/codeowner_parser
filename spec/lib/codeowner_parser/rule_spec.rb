@@ -105,4 +105,56 @@ RSpec.describe CodeownerParser::Rule do
 
     it { is_expected.to have_owner(['@doctocat', '@doctor']) }
   end
+
+  context 'with rooted **/ and trailing single-star wildcard' do
+    let(:rule_string) { '/**/* @everyone' }
+
+    it 'matches a file at the root' do
+      is_expected.to apply_to('/file.rb')
+    end
+
+    it 'matches a file in a subdirectory' do
+      is_expected.to apply_to('/app/models/user.rb')
+    end
+
+    it 'does not match the root itself' do
+      is_expected.not_to apply_to('/')
+    end
+  end
+
+  context 'with rooted **/ wildcard matching any depth' do
+    let(:rule_string) { '/**/*.rb @ruby-team' }
+
+    it 'matches a file at the root (zero intermediate directories)' do
+      is_expected.to apply_to('/file.rb')
+    end
+
+    it 'matches a file one directory deep' do
+      is_expected.to apply_to('/app/file.rb')
+    end
+
+    it 'matches a file several directories deep' do
+      is_expected.to apply_to('/app/models/concerns/deeply/nested/file.rb')
+    end
+
+    it 'does not match a different extension' do
+      is_expected.not_to apply_to('/app/file.js')
+    end
+  end
+
+  context 'with **/ wildcard on both sides of a literal segment' do
+    let(:rule_string) { '/**/controllers/**/* @api-team' }
+
+    it 'matches when the literal segment is at the root' do
+      is_expected.to apply_to('/controllers/users_controller.rb')
+    end
+
+    it 'matches when the literal segment is nested' do
+      is_expected.to apply_to('/api/v2/controllers/admin_controller.rb')
+    end
+
+    it 'does not match a path with no literal segment' do
+      is_expected.not_to apply_to('/api/v2/admin_controller.rb')
+    end
+  end
 end

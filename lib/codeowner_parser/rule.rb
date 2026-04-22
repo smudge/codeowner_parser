@@ -18,14 +18,18 @@ module CodeownerParser
     private
 
     def path_regex
-      literals = @rule_path.split('*', -1)
-      regex = ''
+      # Split on '**/' to identify zero-or-more directory segment matching,
+      # then split each remaining segment on '*' for single-segment wildcards.
+      regex = @rule_path.split('**/').map { |segment|
+        segment.split('*', -1).map { |literal|
+          Regexp.escape(literal)
+        }.join('[^\/]+')
+      }.join('(.*\/)?')
+
       # If path started with a slash, this is rooted.
-      regex += '\A' if literals.first.start_with?('/')
-      # Join with a wildcard for anything other than a slash.
-      regex += literals.map { |literal| Regexp.escape(literal) }.join('[^\/]+')
+      regex = "\\A#{regex}" if @rule_path.start_with?('/')
       # If path did not end with a slash, do not search into subdirectories.
-      regex += '\Z' unless literals.last.end_with?('/')
+      regex += '\Z' unless @rule_path.end_with?('/')
 
       Regexp.compile(regex)
     end
