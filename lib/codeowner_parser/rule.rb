@@ -23,8 +23,8 @@ module CodeownerParser
       regex = @rule_path.split('**/').map { |segment|
         segment.split('*', -1).map { |literal|
           Regexp.escape(literal)
-        }.join('[^\/]+')
-      }.join('(.*\/)?')
+        }.join('[^\/]*')
+      }.join('(.+\/)*')
 
       # If path started with a slash, this is rooted.
       regex = "\\A#{regex}" if @rule_path.start_with?('/')

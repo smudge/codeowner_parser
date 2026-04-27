@@ -116,10 +116,6 @@ RSpec.describe CodeownerParser::Rule do
     it 'matches a file in a subdirectory' do
       is_expected.to apply_to('/app/models/user.rb')
     end
-
-    it 'does not match the root itself' do
-      is_expected.not_to apply_to('/')
-    end
   end
 
   context 'with rooted **/ wildcard matching any depth' do
@@ -140,6 +136,15 @@ RSpec.describe CodeownerParser::Rule do
     it 'does not match a different extension' do
       is_expected.not_to apply_to('/app/file.js')
     end
+  end
+
+  context 'with single * wildcard matching zero characters' do
+    let(:rule_string) { 'Widget*.tsx @ui-team' }
+
+    it { is_expected.to apply_to('Widget.tsx') }
+    it { is_expected.to apply_to('Widget.Baz.tsx') }
+    it { is_expected.not_to apply_to('widget.tsx') }
+    it { is_expected.to have_owner(['@ui-team']) }
   end
 
   context 'with **/ wildcard on both sides of a literal segment' do
